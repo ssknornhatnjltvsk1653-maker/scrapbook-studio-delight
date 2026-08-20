@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { playKawaii } from "@/lib/kawaii-sound";
 
 // 👉 VIDEO LIVES HERE: public/video/final-video.mp4
@@ -43,36 +43,42 @@ function BoxDoodle() {
   );
 }
 
-export default function MysteryBox() {
+export default function MysteryBox({ onFinish }: { onFinish?: () => void }) {
   const [open, setOpen] = useState(false);
   const [opening, setOpening] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Playback is started synchronously inside the click handler so the browser
-  // keeps the user-gesture permission (needed on iOS/Safari).
-  const handleOpen = () => {
+  // Start playback synchronously inside the click handler so the browser keeps
+  // the user-gesture permission (required on iOS/Safari and Chrome autoplay).
+  const startVideo = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = false;
+    v.volume = 1;
+    const attempt = v.play();
+    if (attempt && typeof attempt.catch === "function") {
+      attempt.catch(() => {
+        // Sound blocked → retry muted so the video still plays, never crash.
+        v.muted = true;
+        const retry = v.play();
+        if (retry && typeof retry.catch === "function")
+          retry.catch(() => setBlocked(true));
+      });
+    }
+  }, []);
+
+  const handleOpen = (e: React.MouseEvent) => {
+    // The mystery box is an interactive element, never a page-turn gesture.
+    e.preventDefault();
+    e.stopPropagation();
     if (open || opening) return;
     playKawaii("open");
     setOpening(true);
-
-    const v = videoRef.current;
-    if (v) {
-      v.muted = false;
-      const p = v.play();
-      if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          // sound blocked → fall back to muted autoplay, never crash
-          v.muted = true;
-          void v.play().catch(() => undefined);
-        });
-      }
-    }
-
-    window.setTimeout(() => {
-      setOpen(true);
-      setOpening(false);
-    }, 650);
+    setOpen(true); // video wrapper becomes visible in the same tick
+    startVideo();
+    window.setTimeout(() => setOpening(false), 650);
   };
 
   return (
@@ -82,6 +88,7 @@ export default function MysteryBox() {
           type="button"
           className={`doodle-box-btn${opening ? " is-opening" : ""}`}
           onClick={handleOpen}
+          onPointerDown={(e) => e.stopPropagation()}
           aria-label="open the mystery box"
         >
           <BoxDoodle />
@@ -89,16 +96,20 @@ export default function MysteryBox() {
         </button>
       )}
 
+      {/* Always mounted (never display:none) so play() has a live element,
+          preload="none" keeps the file off the wire until the box is opened. */}
       <div className={`mystery-reveal${open ? " is-shown" : ""}`}>
         <div className="video-frame">
+          <span className="video-tape" aria-hidden />
           {!videoBroken ? (
             <video
               ref={videoRef}
               className="video-el"
               src={VIDEO_SRC}
-              preload="metadata"
+              preload="none"
               playsInline
               controls
+              onEnded={() => onFinish?.()}
               onError={() => setVideoBroken(true)}
             />
           ) : (
@@ -108,8 +119,15 @@ export default function MysteryBox() {
               drop it at <code>public/video/final-video.mp4</code>
             </p>
           )}
+          {blocked && !videoBroken && (
+            <button type="button" className="scrap-btn video-retry" onClick={startVideo}>
+              tap to play
+            </button>
+          )}
         </div>
-        {open && <p className="scrap-text doodle-caption">the last little surprise</p>}
+        {open && (
+          <p className="scrap-text doodle-caption">the last little surprise</p>
+        )}
       </div>
     </div>
   );
