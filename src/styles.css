@@ -142,3 +142,500 @@
     color: var(--color-foreground);
   }
 }
+
+/* ── Scrapbook ─────────────────────────────────────────── */
+.scrap-stage {
+  background:
+    radial-gradient(circle at 20% 20%, oklch(0.95 0.04 20 / 0.7), transparent 55%),
+    radial-gradient(circle at 80% 80%, oklch(0.93 0.05 250 / 0.7), transparent 55%),
+    oklch(0.97 0.012 90);
+}
+
+.scrap-book {
+  filter: drop-shadow(0 24px 40px oklch(0 0 0 / 0.25));
+}
+
+.scrap-note {
+  background: oklch(0.99 0.015 90 / 0.86);
+  border: 1px dashed oklch(0.78 0.08 20 / 0.7);
+  border-radius: 0.6rem;
+  padding: 0.85rem 0.7rem;
+  box-shadow: 0 6px 16px oklch(0 0 0 / 0.12);
+  font-family: "Patrick Hand", ui-rounded, "Comic Sans MS", cursive;
+  color: oklch(0.32 0.05 25);
+  text-align: center;
+  text-shadow: 0 1px 0 oklch(1 0 0 / 0.7);
+}
+
+.scrap-title {
+  font-family: "Gaegu", "Patrick Hand", cursive;
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.15;
+  color: oklch(0.5 0.16 15);
+  margin-bottom: 0.5rem;
+}
+
+.scrap-text {
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.scrap-loud {
+  font-weight: 700;
+  color: oklch(0.52 0.17 15);
+}
+
+.scrap-list {
+  font-size: 0.86rem;
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+}
+
+.scrap-list li::before {
+  content: "🍓 ";
+}
+
+.scrap-hint {
+  font-family: "Patrick Hand", cursive;
+  color: oklch(0.55 0.05 25);
+  font-size: 0.9rem;
+}
+
+/* ── Responsive book shell ─────────────────────────────── */
+.scrap-stage {
+  position: relative;
+  overflow-x: hidden;
+}
+
+.scrap-book-shell {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.scrap-book {
+  width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
+}
+
+/* Every page keeps its original 420x560 artwork and is scaled to fit. */
+.page-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 420px;
+  height: 560px;
+  transform: scale(var(--page-scale, 1));
+  transform-origin: top left;
+}
+
+.page-interactive {
+  position: absolute;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  animation: scrap-page-in 0.5s ease-out both;
+}
+
+@keyframes scrap-page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.scrap-hint-small {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+/* ── Cute buttons ──────────────────────────────────────── */
+.scrap-btn {
+  font-family: "Patrick Hand", ui-rounded, "Comic Sans MS", cursive;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.95rem;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px dashed oklch(0.72 0.11 15 / 0.8);
+  background: oklch(0.99 0.02 90 / 0.92);
+  color: oklch(0.42 0.13 15);
+  box-shadow: 0 4px 10px oklch(0 0 0 / 0.12);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
+}
+.scrap-btn:hover { transform: translateY(-2px) rotate(-1deg); }
+.scrap-btn:active { transform: scale(0.95); }
+
+/* ── Dreamy animated background ────────────────────────── */
+.scrap-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scrap-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  animation: scrap-drift 26s ease-in-out infinite alternate;
+}
+.scrap-blob-1 {
+  width: 46vmax; height: 46vmax; top: -12vmax; left: -10vmax;
+  background: oklch(0.9 0.09 20 / 0.75);
+}
+.scrap-blob-2 {
+  width: 40vmax; height: 40vmax; bottom: -14vmax; right: -8vmax;
+  background: oklch(0.9 0.08 250 / 0.7);
+  animation-duration: 32s;
+}
+.scrap-blob-3 {
+  width: 30vmax; height: 30vmax; top: 35%; left: 55%;
+  background: oklch(0.94 0.09 100 / 0.6);
+  animation-duration: 38s;
+}
+@keyframes scrap-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(4vmax, -3vmax, 0) scale(1.12); }
+}
+
+.scrap-floaty {
+  position: absolute;
+  bottom: -10vh;
+  opacity: 0.55;
+  animation-name: scrap-float-up;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+@keyframes scrap-float-up {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(-115vh) rotate(160deg); opacity: 0; }
+}
+
+.scrap-twinkle {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: oklch(0.98 0.06 95);
+  box-shadow: 0 0 8px oklch(0.9 0.1 60 / 0.9);
+  animation: scrap-twinkle 4.5s ease-in-out infinite;
+}
+@keyframes scrap-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.6); }
+  50% { opacity: 0.95; transform: scale(1.3); }
+}
+
+.scrap-shoot {
+  position: absolute;
+  width: 90px; height: 2px;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.9));
+  border-radius: 2px;
+  opacity: 0;
+  animation: scrap-shoot 12s ease-in infinite;
+}
+.scrap-shoot-1 { top: 12%; left: -12%; }
+.scrap-shoot-2 { top: 62%; left: -12%; animation-delay: 6.5s; }
+@keyframes scrap-shoot {
+  0%   { transform: translate(0, 0) rotate(18deg); opacity: 0; }
+  4%   { opacity: 0.9; }
+  14%  { transform: translate(120vw, 26vh) rotate(18deg); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrap-floaty, .scrap-twinkle, .scrap-shoot, .scrap-blob,
+  .doodle-box-btn, .sticker-extra, .memo-win-burst { animation: none !important; }
+}
+
+/* ── Digital Sticker Room ──────────────────────────────── */
+.sticker-room {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.sticker-room-head { width: 100%; }
+
+.sticker-field {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  border: 1px dashed oklch(0.78 0.08 20 / 0.55);
+  border-radius: 0.8rem;
+  background: oklch(1 0.01 90 / 0.35);
+}
+
+.sticker {
+  position: absolute;
+  line-height: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(1px 3px 3px oklch(0 0 0 / 0.28));
+}
+.sticker-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  animation: sticker-jump 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes sticker-jump {
+  0% { transform: translateY(0) scale(1) rotate(0deg); }
+  35% { transform: translateY(-9px) scale(1.12) rotate(-3deg); }
+  70% { transform: translateY(0) scale(1) rotate(3deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+/* tiny drawn shine, no emoji */
+.sticker-shine {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 14px; height: 14px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, transparent 45%, oklch(0.62 0.16 90) 45% 55%, transparent 55%),
+    linear-gradient(to bottom, transparent 45%, oklch(0.62 0.16 90) 45% 55%, transparent 55%);
+  animation: sticker-shine 0.7s ease-out forwards;
+}
+@keyframes sticker-shine {
+  0% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  40% { opacity: 1; transform: scale(1) rotate(35deg); }
+  100% { opacity: 0; transform: scale(0.6) translateY(-12px) rotate(70deg); }
+}
+.sticker-extra {
+  position: absolute;
+  width: 60px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(1px 3px 3px oklch(0 0 0 / 0.25));
+  animation: sticker-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             sticker-wobble 3.4s ease-in-out 0.5s infinite;
+}
+@keyframes sticker-pop-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(-24deg); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+@keyframes sticker-wobble {
+  0%, 100% { rotate: -5deg; }
+  50% { rotate: 5deg; }
+}
+
+/* ── Twinny Memory Match ───────────────────────────────── */
+.memo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+.memo-head { width: 100%; }
+
+.memo-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: 280px;
+  padding: 8px;
+  border-radius: 0.8rem;
+  background: oklch(0.99 0.015 90 / 0.9);
+  border: 1px dashed oklch(0.78 0.08 20 / 0.7);
+  box-shadow: 0 6px 16px oklch(0 0 0 / 0.14);
+}
+.memo-card {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  perspective: 500px;
+}
+.memo-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  transition: transform 0.35s ease;
+  border: 1px dashed oklch(0.72 0.09 20 / 0.75);
+}
+.memo-back {
+  background:
+    repeating-linear-gradient(45deg, oklch(0.93 0.05 20 / 0.6) 0 5px, oklch(0.98 0.02 90 / 0.8) 5px 10px);
+}
+.memo-front {
+  background: oklch(1 0.01 90 / 0.95);
+  transform: rotateY(180deg);
+  padding: 3px;
+}
+.memo-front img { max-width: 100%; max-height: 100%; }
+.memo-card.is-open .memo-back { transform: rotateY(180deg); }
+.memo-card.is-open .memo-front { transform: rotateY(0deg); }
+.memo-card.is-matched { animation: memo-matched 0.5s ease-out; }
+.memo-card.is-matched .memo-front { border-color: oklch(0.62 0.16 15 / 0.9); }
+@keyframes memo-matched {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.09) rotate(-3deg); }
+}
+
+.memo-win {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border-radius: 0.8rem;
+  background: oklch(1 0.02 90 / 0.86);
+  animation: scrap-page-in 0.4s ease-out both;
+  pointer-events: none;
+  overflow: hidden;
+}
+.memo-win-text {
+  font-family: "Gaegu", "Patrick Hand", cursive;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: oklch(0.5 0.16 15);
+}
+.memo-win-sub {
+  font-family: "Patrick Hand", cursive;
+  font-size: 0.85rem;
+  color: oklch(0.42 0.09 25);
+}
+.memo-win-burst {
+  position: absolute;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px dashed oklch(0.62 0.16 15 / 0.7);
+  animation: memo-burst 1.4s ease-out infinite;
+}
+@keyframes memo-burst {
+  0% { transform: scale(0.3); opacity: 0.9; }
+  100% { transform: scale(3.6); opacity: 0; }
+}
+
+/* ── Hand-drawn Mystery Box ────────────────────────────── */
+.mystery-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.doodle-box-btn {
+  border: none;
+  background: transparent;
+  padding: 0.2rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  color: oklch(0.36 0.06 28);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  animation: doodle-float 3.6s ease-in-out infinite;
+}
+.doodle-box {
+  width: min(210px, 60vw);
+  height: auto;
+  transition: transform 0.2s ease;
+}
+.doodle-box-btn:hover .doodle-box { transform: rotate(-2deg) scale(1.03); }
+.doodle-box-btn:active .doodle-box { transform: scale(0.97); }
+.doodle-label {
+  font-family: "Gaegu", "Patrick Hand", cursive;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  color: oklch(0.5 0.16 15);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+@keyframes doodle-float {
+  0%, 100% { transform: translateY(0) rotate(-0.6deg); }
+  50% { transform: translateY(-7px) rotate(0.6deg); }
+}
+
+.doodle-box-btn.is-opening { animation: doodle-open 0.65s ease-in forwards; }
+@keyframes doodle-open {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.05) rotate(-4deg); }
+  60% { transform: scale(1.06) rotate(4deg); }
+  100% { transform: scale(1.15) rotate(-1deg); opacity: 0; }
+}
+.doodle-box-btn.is-opening .doodle-lid {
+  animation: doodle-lid 0.65s ease-out forwards;
+  transform-origin: 100px 56px;
+}
+@keyframes doodle-lid {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-38px) rotate(-16deg); }
+}
+
+.mystery-reveal {
+  position: relative;
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.mystery-reveal.is-shown {
+  display: flex;
+  animation: scrap-page-in 0.5s ease-out both;
+}
+.doodle-caption {
+  font-family: "Patrick Hand", cursive;
+  color: oklch(0.45 0.07 25);
+}
+
+.video-frame {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  padding: 8px;
+  border-radius: 1rem;
+  background: oklch(0.99 0.015 90 / 0.95);
+  border: 1px dashed oklch(0.78 0.08 20 / 0.8);
+  box-shadow: 0 8px 20px oklch(0 0 0 / 0.18);
+  rotate: -1deg;
+}
+.video-el {
+  display: block;
+  width: 100%;
+  max-height: 330px;
+  border-radius: 0.7rem;
+  background: oklch(0.2 0.02 260);
+  object-fit: contain;
+}
+.video-missing { padding: 1.2rem 0.6rem; }
