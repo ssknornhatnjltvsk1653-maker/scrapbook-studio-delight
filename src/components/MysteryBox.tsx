@@ -46,7 +46,6 @@ function BoxDoodle() {
 export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | undefined }) {
   const [open, setOpen] = useState(false);
   const [opening, setOpening] = useState(false);
-  const [videoBroken, setVideoBroken] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -59,12 +58,6 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
     // Start muted: every browser (incl. iOS Safari) allows this from a tap.
     v.muted = true;
     v.volume = 1;
-    try {
-      v.load();
-    } catch {
-      /* noop */
-    }
-    v.currentTime = 0;
     const attempt = v.play();
     const unmute = () => {
       v.muted = false;
@@ -85,11 +78,16 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
     // The mystery box is an interactive element, never a page-turn gesture.
     e.preventDefault();
     e.stopPropagation();
-    if (open || opening) return;
-    playKawaii("open");
+    if (open) return;
     setOpening(true);
     setOpen(true); // video wrapper becomes visible in the same tick
+    // playback first (still inside the user gesture), sound after
     startVideo();
+    try {
+      playKawaii("open");
+    } catch {
+      /* noop */
+    }
     window.setTimeout(() => setOpening(false), 650);
   };
 
@@ -108,30 +106,21 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
         </button>
       )}
 
-      {/* Always mounted (never display:none) so play() has a live element,
-          preload="none" keeps the file off the wire until the box is opened. */}
+      {/* Always mounted (never display:none / never unmounted) so play() always
+          has a live element during the tap. */}
       <div className={`mystery-reveal${open ? " is-shown" : ""}`}>
         <div className="video-frame">
           <span className="video-tape" aria-hidden />
-          {!videoBroken ? (
-            <video
-              ref={videoRef}
-              className="video-el"
-              src={VIDEO_SRC}
-              preload="metadata"
-              playsInline
-              controls
-              onEnded={() => onFinish?.()}
-              onError={() => setVideoBroken(true)}
-            />
-          ) : (
-            <p className="scrap-text video-missing">
-              the video is not here yet
-              <br />
-              drop it at <code>public/video/final-video.mp4</code>
-            </p>
-          )}
-          {blocked && !videoBroken && (
+          <video
+            ref={videoRef}
+            className="video-el"
+            src={VIDEO_SRC}
+            preload="metadata"
+            playsInline
+            controls
+            onEnded={() => onFinish?.()}
+          />
+          {blocked && (
             <button type="button" className="scrap-btn video-retry" onClick={startVideo}>
               tap to play
             </button>
