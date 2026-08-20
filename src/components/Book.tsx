@@ -27,6 +27,17 @@ function Sticker({
   );
 }
 
+/** Transparent strips down both page edges that always flip the page,
+ * even when an interactive widget fills the middle of the page. */
+function FlipEdges() {
+  return (
+    <>
+      <span className="flip-edge is-left" aria-hidden />
+      <span className="flip-edge is-right" aria-hidden />
+    </>
+  );
+}
+
 function Note({ children }: { children: ReactNode }) {
   return (
     <div className="absolute inset-0 z-[90] flex items-center justify-center p-6 pointer-events-none">
@@ -35,8 +46,9 @@ function Note({ children }: { children: ReactNode }) {
   );
 }
 
-export default function Book({ onFinish }: { onFinish?: () => void }) {
+export default function Book({ onFinish }: { onFinish?: (() => void) | undefined }) {
   const bookRef = useRef<HTMLDivElement>(null);
+  const flipRef = useRef<PageFlip | null>(null);
 
   useEffect(() => {
     const el = bookRef.current;
@@ -85,10 +97,14 @@ export default function Book({ onFinish }: { onFinish?: () => void }) {
         usePortrait: true,
         mobileScrollSupport: true,
         startPage: 0,
+        // We drive flips ourselves (see below) so that touches inside an
+        // interactive widget can never be read as a page turn.
+        useMouseEvents: false,
       } as ConstructorParameters<typeof PageFlip>[1]);
 
       flip.loadFromHTML(pages);
       syncScale();
+      flipRef.current = flip;
 
       if (typeof ResizeObserver !== "undefined") {
         ro = new ResizeObserver(() => syncScale());
@@ -96,9 +112,54 @@ export default function Book({ onFinish }: { onFinish?: () => void }) {
       }
     });
 
+    // --- our own gesture layer -------------------------------------------
+    // Anything that starts inside `.page-interactive` (stickers, puzzle,
+    // mystery box / video) is ignored completely: no flip, and the widget
+    // keeps its own pointer/touch handling untouched.
+    let start: { x: number; y: number; t: number } | null = null;
+
+    const insideWidget = (t: EventTarget | null) =>
+      t instanceof Element && !!t.closest(".page-interactive");
+
+    const onDown = (e: PointerEvent) => {
+      if (insideWidget(e.target)) {
+        start = null;
+        return;
+      }
+      start = { x: e.clientX, y: e.clientY, t: Date.now() };
+    };
+
+    const onUp = (e: PointerEvent) => {
+      const s = start;
+      start = null;
+      if (!s || insideWidget(e.target)) return;
+      const f = flipRef.current;
+      if (!f) return;
+      const dx = e.clientX - s.x;
+      const dy = e.clientY - s.y;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) f.flipNext();
+        else f.flipPrev();
+        return;
+      }
+      // plain tap: right half forward, left half back
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12 && Date.now() - s.t < 600) {
+        const r = el.getBoundingClientRect();
+        if (e.clientX - r.left > r.width / 2) f.flipNext();
+        else f.flipPrev();
+      }
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", () => (start = null));
+
     return () => {
       cancelled = true;
       ro?.disconnect();
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointerup", onUp);
+      flipRef.current = null;
       try {
         flip?.destroy();
       } catch {
@@ -305,6 +366,7 @@ export default function Book({ onFinish }: { onFinish?: () => void }) {
             className="scale-38 rotate-18 translate-x-30 translate-y-6 z-[60]"
           />
 
+          <FlipEdges />
           <Interactive>
             <StickerRoom />
           </Interactive></div>
@@ -386,6 +448,7 @@ export default function Book({ onFinish }: { onFinish?: () => void }) {
             src="/elements/side5.png"
             className="scale-45 translate-x-26 translate-y-40 z-[60]"
           />
+          <FlipEdges />
           <Interactive>
             <StickerPuzzle />
           </Interactive>
@@ -407,6 +470,7 @@ export default function Book({ onFinish }: { onFinish?: () => void }) {
             src="/elements/lovetape.png"
             className="scale-12 translate-x-26 translate-y-48 z-[60]"
           />
+          <FlipEdges />
           <Interactive>
             <MysteryBox onFinish={onFinish} />
           </Interactive>

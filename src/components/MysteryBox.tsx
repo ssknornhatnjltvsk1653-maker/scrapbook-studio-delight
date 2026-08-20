@@ -43,7 +43,7 @@ function BoxDoodle() {
   );
 }
 
-export default function MysteryBox({ onFinish }: { onFinish?: () => void }) {
+export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | undefined }) {
   const [open, setOpen] = useState(false);
   const [opening, setOpening] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
@@ -55,21 +55,33 @@ export default function MysteryBox({ onFinish }: { onFinish?: () => void }) {
   const startVideo = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.muted = false;
+    setBlocked(false);
+    // Start muted: every browser (incl. iOS Safari) allows this from a tap.
+    v.muted = true;
     v.volume = 1;
+    try {
+      v.load();
+    } catch {
+      /* noop */
+    }
+    v.currentTime = 0;
     const attempt = v.play();
-    if (attempt && typeof attempt.catch === "function") {
-      attempt.catch(() => {
-        // Sound blocked → retry muted so the video still plays, never crash.
+    const unmute = () => {
+      v.muted = false;
+      // If unmuting pauses it (rare), fall back to muted playback.
+      if (v.paused) {
         v.muted = true;
-        const retry = v.play();
-        if (retry && typeof retry.catch === "function")
-          retry.catch(() => setBlocked(true));
-      });
+        void v.play().catch(() => setBlocked(true));
+      }
+    };
+    if (attempt && typeof attempt.then === "function") {
+      attempt.then(unmute).catch(() => setBlocked(true));
+    } else {
+      unmute();
     }
   }, []);
 
-  const handleOpen = (e: React.MouseEvent) => {
+  const handleOpen = (e: React.MouseEvent | React.PointerEvent) => {
     // The mystery box is an interactive element, never a page-turn gesture.
     e.preventDefault();
     e.stopPropagation();
@@ -106,7 +118,7 @@ export default function MysteryBox({ onFinish }: { onFinish?: () => void }) {
               ref={videoRef}
               className="video-el"
               src={VIDEO_SRC}
-              preload="none"
+              preload="metadata"
               playsInline
               controls
               onEnded={() => onFinish?.()}

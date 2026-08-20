@@ -237,7 +237,9 @@
 
 .page-interactive {
   position: absolute;
-  inset: 0;
+  /* leave a flip-able border around every interactive widget so the page can
+     still be turned by swiping/tapping the page area OUTSIDE the game */
+  inset: 2% 34px;
   z-index: 95;
   display: flex;
   flex-direction: column;
@@ -246,6 +248,22 @@
   gap: 0.5rem;
   padding: 0.9rem;
   animation: scrap-page-in 0.5s ease-out both;
+}
+
+/* page-turn strips down both edges of an interactive page */
+.flip-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 34px;
+  z-index: 96;
+  cursor: pointer;
+}
+.flip-edge.is-left {
+  left: 0;
+}
+.flip-edge.is-right {
+  right: 0;
 }
 
 @keyframes scrap-page-in {
@@ -605,13 +623,24 @@
 .mystery-reveal {
   position: relative;
   width: 100%;
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
+  /* never display:none — a hidden video element cannot start playback on
+     iOS/Safari. Collapse it instead so play() always has a live element. */
+  visibility: hidden;
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 .mystery-reveal.is-shown {
-  display: flex;
+  visibility: visible;
+  opacity: 1;
+  height: auto;
+  overflow: visible;
+  pointer-events: auto;
   animation: scrap-page-in 0.5s ease-out both;
 }
 .doodle-caption {
