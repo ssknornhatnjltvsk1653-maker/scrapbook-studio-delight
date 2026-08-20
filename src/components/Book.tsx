@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import StickerRoom from "./StickerRoom";
-import TinyPuzzle from "./TinyPuzzle";
+import StickerPuzzle from "./StickerPuzzle";
+import Interactive from "./Interactive";
 import MysteryBox from "./MysteryBox";
 import type { PageFlip } from "page-flip";
 
@@ -34,7 +35,7 @@ function Note({ children }: { children: ReactNode }) {
   );
 }
 
-export default function Book() {
+export default function Book({ onFinish }: { onFinish?: () => void }) {
   const bookRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -304,9 +305,9 @@ export default function Book() {
             className="scale-38 rotate-18 translate-x-30 translate-y-6 z-[60]"
           />
 
-          <div className="page-interactive">
+          <Interactive>
             <StickerRoom />
-          </div></div>
+          </Interactive></div>
       </div>
 
       {/* Page 5 */}
@@ -370,7 +371,7 @@ export default function Book() {
           </Note></div>
       </div>
 
-      {/* Page 6 — Tiny Twinny Puzzle */}
+      {/* Page 6 — Sticker Puzzle */}
       <div
         className="book-page relative overflow-hidden bg-amber-50 text-black"
         style={pageStyle}
@@ -385,9 +386,9 @@ export default function Book() {
             src="/elements/side5.png"
             className="scale-45 translate-x-26 translate-y-40 z-[60]"
           />
-          <div className="page-interactive">
-            <TinyPuzzle />
-          </div>
+          <Interactive>
+            <StickerPuzzle />
+          </Interactive>
         </div>
       </div>
 
@@ -406,9 +407,9 @@ export default function Book() {
             src="/elements/lovetape.png"
             className="scale-12 translate-x-26 translate-y-48 z-[60]"
           />
-          <div className="page-interactive">
-            <MysteryBox />
-          </div>
+          <Interactive>
+            <MysteryBox onFinish={onFinish} />
+          </Interactive>
         </div>
       </div>
 
