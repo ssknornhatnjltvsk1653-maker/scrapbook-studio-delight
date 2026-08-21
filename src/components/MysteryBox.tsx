@@ -50,21 +50,23 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
   const [open, setOpen] = useState(false);
   const [opening, setOpening] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [src, setSrc] = useState(VIDEO_SRC);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const openedRef = useRef(false);
 
-  // Start playback synchronously inside the click handler so the browser keeps
-  // the user-gesture permission (required on iOS/Safari and Chrome autoplay).
+  // Start playback synchronously inside the tap so the browser keeps the
+  // user-gesture permission (required on iOS/Safari and Chrome autoplay).
   const startVideo = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     setBlocked(false);
-    // Start muted: every browser (incl. iOS Safari) allows this from a tap.
+    // Muted start is always allowed; we unmute as soon as it is actually playing.
     v.muted = true;
     v.volume = 1;
     const attempt = v.play();
     const unmute = () => {
       v.muted = false;
-      // If unmuting pauses it (rare), fall back to muted playback.
       if (v.paused) {
         v.muted = true;
         void v.play().catch(() => setBlocked(true));
@@ -77,31 +79,60 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
     }
   }, []);
 
-  const handleOpen = (e: React.MouseEvent | React.PointerEvent) => {
-    // The mystery box is an interactive element, never a page-turn gesture.
-    e.preventDefault();
-    e.stopPropagation();
-    if (open) return;
+  const doOpen = useCallback(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
     setOpening(true);
-    setOpen(true); // video wrapper becomes visible in the same tick
-    // playback first (still inside the user gesture), sound after
-    startVideo();
+    setOpen(true); // reveal becomes visible in the same tick
+    startVideo(); // still inside the user gesture
     try {
       playKawaii("open");
     } catch {
       /* noop */
     }
     window.setTimeout(() => setOpening(false), 650);
-  };
+  }, [startVideo]);
+
+  // The book pages are moved around by the flip engine, which can swallow
+  // React's delegated click events — so listen natively on the button itself.
+  useEffect(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const onTap = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      doOpen();
+    };
+    btn.addEventListener("click", onTap);
+    btn.addEventListener("pointerup", onTap);
+    btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    return () => {
+      btn.removeEventListener("click", onTap);
+      btn.removeEventListener("pointerup", onTap);
+    };
+  }, [doOpen]);
+
+  // Same for the fallback "tap to play" button.
+  const retryRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const btn = retryRef.current;
+    if (!btn) return;
+    const onTap = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startVideo();
+    };
+    btn.addEventListener("click", onTap);
+    return () => btn.removeEventListener("click", onTap);
+  }, [startVideo, blocked]);
 
   return (
     <div className="mystery-wrap">
       {!open && (
         <button
+          ref={btnRef}
           type="button"
           className={`doodle-box-btn${opening ? " is-opening" : ""}`}
-          onClick={handleOpen}
-          onPointerDown={(e) => e.stopPropagation()}
           aria-label="open the mystery box"
         >
           <BoxDoodle />
@@ -117,14 +148,22 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
           <video
             ref={videoRef}
             className="video-el"
-            src={VIDEO_SRC}
+            src={src}
             preload="metadata"
             playsInline
             controls
             onEnded={() => onFinish?.()}
+            onError={() => {
+              // CDN copy unreachable? fall back to the bundled file once.
+              if (src !== VIDEO_FALLBACK) {
+                setSrc(VIDEO_FALLBACK);
+              } else {
+                setBlocked(true);
+              }
+            }}
           />
           {blocked && (
-            <button type="button" className="scrap-btn video-retry" onClick={startVideo}>
+            <button ref={retryRef} type="button" className="scrap-btn video-retry">
               tap to play
             </button>
           )}
@@ -136,3 +175,4 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
     </div>
   );
 }
+
