@@ -80,6 +80,7 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
   }, []);
 
   const doOpen = useCallback(() => {
+    console.log('[box] doOpen fired');
     if (openedRef.current) return;
     openedRef.current = true;
     setOpening(true);
@@ -103,6 +104,7 @@ export default function MysteryBox({ onFinish }: { onFinish?: (() => void) | und
       e.stopPropagation();
       doOpen();
     };
+    console.log("[box] listeners attached");
     btn.addEventListener("click", onTap);
     btn.addEventListener("pointerup", onTap);
     btn.addEventListener("pointerdown", (e) => e.stopPropagation());
