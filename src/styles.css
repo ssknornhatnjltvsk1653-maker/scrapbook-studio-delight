@@ -668,3 +668,11 @@
   object-fit: contain;
 }
 .video-missing { padding: 1.2rem 0.6rem; }
+
+/* page-flip paints shadow overlays on top of the page — they must never
+   swallow taps meant for the interactive widgets underneath. */
+.stf__outerShadow,
+.stf__innerShadow,
+.stf__shadow {
+  pointer-events: none !important;
+}
