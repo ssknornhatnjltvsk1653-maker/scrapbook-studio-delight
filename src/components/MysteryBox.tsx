@@ -1,8 +1,11 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { playKawaii } from "@/lib/kawaii-sound";
+import videoAsset from "@/assets/mystery-video.mp4.asset.json";
 
-// 👉 VIDEO LIVES HERE: public/video/final-video.mp4
-const VIDEO_SRC = "/video/final-video.mp4";
+// CDN copy (primary) + local fallback at public/video/final-video.mp4
+const VIDEO_SRC = videoAsset.url;
+const VIDEO_FALLBACK = "/video/final-video.mp4";
+
 
 /** Hand-drawn doodle mystery box, inked straight onto the scrapbook page. */
 function BoxDoodle() {
